@@ -1,0 +1,80 @@
+CompileFlags:
+    CompilationDatabase: builddir/release
+    Remove: [-std=c++23, -mxl-soft-mul]
+    Add: [-std=c++2b, -D__cpp_concepts=202002L, -D__MICROBLAZE__]
+
+---
+Index:
+  StandardLibrary: Yes
+
+---
+Hover:
+  ShowAKA: Yes
+
+---
+If:
+    PathMatch: [src/.*]
+
+CompileFlags:
+    Add: [-Weverything,
+          -Wno-documentation-unknown-command,
+          -Wno-covered-switch-default,
+          -Wno-gnu-binary-literal,
+          -Wno-reserved-identifier,
+          -Wno-deprecated-volatile,
+          -Wno-c++98-c++11-compat-binary-literal,
+          -Wno-c++98-compat-pedantic,
+          -Wno-c++20-compat-pedantic,
+          -Wno-old-style-cast,
+          -Wno-exit-time-destructors,
+          -Wno-global-constructors,
+          -fsanitize=undefined]
+
+---
+If:
+    PathMatch: [subprojects/.*]
+
+CompileFlags:
+    Remove: [-W*]
+    Add: [-Wno-everything]
+
+---
+Diagnostics:
+  UnusedIncludes: Strict
+
+---
+Diagnostics:
+  ClangTidy:
+    Add: [
+        bugprone-*,
+        clang-analyzer-*
+        cppcoreguidelines-*,
+        misc-*,
+        modernize-*,
+        portability-*,
+        performance-*,
+        readability-*,
+    ]
+
+    Remove: [
+        performance-no-int-to-ptr,
+        cppcoreguidelines-pro-type-cstyle-cast,
+        cppcoreguidelines-avoid-magic-numbers,
+        readability-magic-numbers,
+        bugprone-unchecked-optional-access,
+        cppcoreguidelines-pro-type-reinterpret-cast,
+        cppcoreguidelines-avoid-non-const-global-variables,
+        cppcoreguidelines-pro-bounds-constant-array-index,
+        cppcoreguidelines-pro-type-vararg,
+    ]
+
+---
+Diagnostics:
+  ClangTidy:
+    CheckOptions:
+      readability-identifier-naming.VariableCase: lower_case
+      readability-identifier-naming.MemberPrefix: '_'
+      readability-identifier-naming.GlobalConstantCase: UPPER_CASE
+      readability-identifier-naming.ClassCase: CamelCase
+      readability-identifier-naming.EnumCase: CamelCase
+      readability-braces-around-statements.ShortStatementLines: 1

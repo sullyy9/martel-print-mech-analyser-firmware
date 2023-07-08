@@ -1,0 +1,16 @@
+{
+    "remote.extensionKind": {
+        "ms-vscode.vscode-serial-monitor": [
+            "workspace"
+        ]
+    },
+    "clangd.arguments": [
+        // "--query-driver=/usr/local/bin/microblaze-xilinx-elf-*",
+        "--background-index",
+        "--completion-style=detailed",
+        "--header-insertion=never",
+        "--log=verbose",
+        "--pretty",
+    ],
+    "mesonbuild.configureOnOpen": false,
+}

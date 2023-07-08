@@ -1,0 +1,33 @@
+[host_machine]
+system     = 'none'
+cpu_family = 'microblaze'
+cpu        = 'microblaze'
+endian     = 'little'
+
+[binaries]
+c       = 'microblaze-xilinx-elf-gcc'
+cpp     = 'microblaze-xilinx-elf-g++'
+ld      = 'microblaze-xilinx-elf-ld'
+ar      = 'microblaze-xilinx-elf-ar'
+as      = 'microblaze-xilinx-elf-as'
+size    = 'microblaze-xilinx-elf-size'
+objdump = 'microblaze-xilinx-elf-objdump'
+objcopy = 'microblaze-xilinx-elf-objcopy'
+strip   = 'microblaze-xilinx-elf-strip'
+gdb     = 'microblaze-xilinx-elf-gdb'
+
+exe_wrapper = ''
+
+[built-in options]
+cpp_args = [
+    '-mcpu=v11.0',
+    '-mlittle-endian',
+    '-mxl-soft-mul',]
+
+cpp_link_args = [
+    '-mcpu=v11.0',
+    '-mlittle-endian',
+    '-mxl-soft-mul',]
+
+[properties]
+needs_exe_wrapper = false
