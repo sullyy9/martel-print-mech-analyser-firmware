@@ -1,5 +1,6 @@
 project_src = files(
-    'main.cpp'
+    'main.cpp',
+    'io.cpp'
 )
 
 project_src_dep = declare_dependency(

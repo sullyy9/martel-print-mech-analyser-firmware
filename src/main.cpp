@@ -1,11 +1,12 @@
 #include <cstdint>
 
-#include "xgpio.h"
 #include "xil_printf.h"
 #include "xil_types.h"
 #include "xintc.h"
 #include "xllfifo.h"
 #include "xparameters.h"
+
+#include "io.hpp"
 
 //////////////////////////////////////////////////
 
@@ -19,16 +20,7 @@ enum class MechAction : uint8_t {
 namespace {
 
 // Get device IDs from xparameters.h
-constexpr uint32_t BUTTON_GPIO_ID = XPAR_AXI_GPIO_BUTTONS_DEVICE_ID;
-constexpr uint32_t LED_GPIO_ID = XPAR_AXI_GPIO_LED_DEVICE_ID;
-
 constexpr uint32_t BURN_BUFFER_ID = XPAR_BURN_BUFFER_DEVICE_ID;
-
-constexpr uint32_t BTN_CHANNEL = 1;
-constexpr uint32_t LED_CHANNEL = 1;
-
-constexpr uint32_t BUTTON_MASK = 0b1;
-constexpr uint32_t LED_MASK = 0b11;
 
 constexpr uint16_t INTC_DEVICE_ID = XPAR_INTC_0_DEVICE_ID;
 
@@ -54,7 +46,6 @@ constexpr uint32_t HEAD_WORDS = (HEAD_BYTES / 4);
 namespace {
 
 XIntc interrupt_controller;
-XGpio led_device, btn_device;
 
 XLlFifo burn_buffer;
 
@@ -111,15 +102,7 @@ auto main() -> int {
     xil_printf("Entered function main\r\n");
 
     // Initialize LED Device
-    XGpio_Config* cfg_ptr = nullptr;
-    cfg_ptr = XGpio_LookupConfig(LED_GPIO_ID);
-    XGpio_CfgInitialize(&led_device, cfg_ptr, cfg_ptr->BaseAddress);
-    XGpio_SetDataDirection(&led_device, LED_CHANNEL, 0x00);
-
-    // Initialize Button Device
-    cfg_ptr = XGpio_LookupConfig(BUTTON_GPIO_ID);
-    XGpio_CfgInitialize(&btn_device, cfg_ptr, cfg_ptr->BaseAddress);
-    XGpio_SetDataDirection(&btn_device, BTN_CHANNEL, BUTTON_MASK);
+    io::init();
 
     //////////////////////////////////////////////////
     // Setup burn buffer FIFO.
@@ -176,14 +159,13 @@ auto main() -> int {
 
     xil_printf("Start main loop :)\r\n");
     while(true) {
-        uint32_t data = XGpio_DiscreteRead(&btn_device, BTN_CHANNEL);
-        data &= BUTTON_MASK;
-        if(data != 0) {
-            data = LED_MASK;
+        if(io::button_is_pressed()) {
+            io::monoled_1_on();
+            io::monoled_2_on();
         } else {
-            data = 0;
+            io::monoled_1_off();
+            io::monoled_2_off();
         }
-        XGpio_DiscreteWrite(&led_device, LED_CHANNEL, data);
 
         //////////////////////////////////////////////////
         // Motor advance / reverse.
