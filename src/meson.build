@@ -1,6 +1,7 @@
 project_src = files(
     'main.cpp',
     'io.cpp',
+    'mech.cpp',
     'interrupt.cpp',
 )
 
