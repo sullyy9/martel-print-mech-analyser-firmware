@@ -41,30 +41,30 @@
             "-s",
             "/usr/local/bin/microblaze-xilinx-elf-ar",
             "/usr/local/bin/mb-ar"
+        ],
+        "udev start": [
+            "sudo",
+            "/lib/systemd/systemd-udevd",
+            "--daemon"
+        ],
+        "udev reload rules": [
+            "sudo",
+            "udevadm",
+            "control",
+            "--reload-rules"
+        ],
+        "udev trigger": [
+            "sudo",
+            "udevadm",
+            "trigger"
         ]
-        // "udev start": [
-        //     "sudo",
-        //     "/lib/systemd/systemd-udevd",
-        //     "--daemon"
-        // ],
-        // "udev reload rules": [
-        //     "sudo",
-        //     "udevadm",
-        //     "control",
-        //     "--reload-rules"
-        // ],
-        // "udev trigger": [
-        //     "sudo",
-        //     "udevadm",
-        //     "trigger"
-        // ]
-    }
+    },
     // Uncomment when using a ptrace-based debugger like C++, Go, and Rust
-    // "runArgs": [
-    //     "--privileged",
-    //     "--volume=/dev/bus/usb:/dev/bus/usb",
-    //     "--volume=/dev/ttyACM*:/dev/ttyACM*"
-    // ]
+    "runArgs": [
+        "--privileged",
+        "--volume=/dev/bus/usb:/dev/bus/usb",
+        "--volume=/dev/ttyACM*:/dev/ttyACM*"
+    ]
     // Uncomment to use the Docker CLI from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker.
     // "mounts": [ "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind" ],
     // Uncomment to connect as a non-root user if you've added one. See https://aka.ms/vscode-remote/containers/non-root.
