@@ -22,12 +22,24 @@ exe_wrapper = ''
 cpp_args = [
     '-mcpu=v11.0',
     '-mlittle-endian',
-    '-mxl-soft-mul',]
+    '-mxl-soft-mul',
+
+    '-fno-exceptions',
+    '-fno-non-call-exceptions',
+    '-fno-rtti',
+    '-fno-use-cxa-atexit',
+    '-fno-threadsafe-statics',]
 
 cpp_link_args = [
     '-mcpu=v11.0',
     '-mlittle-endian',
-    '-mxl-soft-mul',]
+    '-mxl-soft-mul',
+
+    '-fno-exceptions',
+    '-fno-non-call-exceptions',
+    '-fno-rtti',
+    '-fno-use-cxa-atexit',
+    '-fno-threadsafe-statics',]
 
 [properties]
 needs_exe_wrapper = false

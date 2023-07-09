@@ -2,11 +2,12 @@
 
 #include "xil_printf.h"
 #include "xil_types.h"
-#include "xintc.h"
 #include "xllfifo.h"
 #include "xparameters.h"
 
+#include "interrupt.hpp"
 #include "io.hpp"
+
 
 //////////////////////////////////////////////////
 
@@ -22,19 +23,6 @@ namespace {
 // Get device IDs from xparameters.h
 constexpr uint32_t BURN_BUFFER_ID = XPAR_BURN_BUFFER_DEVICE_ID;
 
-constexpr uint16_t INTC_DEVICE_ID = XPAR_INTC_0_DEVICE_ID;
-
-constexpr uint8_t MOTOR_ADV_INT_ID =
-    XPAR_MICROBLAZE_0_AXI_INTC_STEPPER_MOTOR_LINE_ADVANCE_TICK_INTR;
-constexpr uint8_t MOTOR_REV_INT_ID =
-    XPAR_MICROBLAZE_0_AXI_INTC_STEPPER_MOTOR_LINE_REVERSE_TICK_INTR;
-
-constexpr uint8_t HEAD_ACTIVE_START_INT_ID =
-    XPAR_MICROBLAZE_0_AXI_INTC_THERMAL_HEAD_HEAD_ACTIVE_START_TICK_INTR;
-
-constexpr uint8_t HEAD_ACTIVE_END_INT_ID =
-    XPAR_MICROBLAZE_0_AXI_INTC_THERMAL_HEAD_HEAD_ACTIVE_END_TICK_INTR;
-
 constexpr uint32_t HEAD_WIDTH = 384;
 constexpr uint32_t HEAD_BYTES = (HEAD_WIDTH / 8);
 constexpr uint32_t HEAD_WORDS = (HEAD_BYTES / 4);
@@ -44,8 +32,6 @@ constexpr uint32_t HEAD_WORDS = (HEAD_BYTES / 4);
 //////////////////////////////////////////////////
 
 namespace {
-
-XIntc interrupt_controller;
 
 XLlFifo burn_buffer;
 
@@ -60,37 +46,10 @@ bool action_complete = true;
 
 }
 
-auto SetUpInterruptSystem(XIntc* controller, uint8_t interrupt_id, XInterruptHandler callback)
-    -> int32_t;
 void motor_advance_isr(void* CallbackRef);
 void motor_reverse_isr(void* CallbackRef);
 void head_active_start_isr(void* CallbackRef);
 void head_active_end_isr(void* CallbackRef);
-
-//////////////////////////////////////////////////
-
-auto SetUpInterruptSystem(XIntc* controller, const uint8_t interrupt_id, XInterruptHandler callback)
-    -> int32_t {
-
-    if(XIntc_Connect(controller, interrupt_id, (XInterruptHandler)callback, nullptr)
-       != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-
-    if(XIntc_Start(controller, XIN_REAL_MODE) != XST_SUCCESS) {
-        return XST_FAILURE;
-    }
-
-    XIntc_Enable(controller, interrupt_id);
-    Xil_ExceptionInit();
-
-    Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
-                                 (Xil_ExceptionHandler)XIntc_InterruptHandler,
-                                 controller);
-    Xil_ExceptionEnable();
-
-    return XST_SUCCESS;
-}
 
 //////////////////////////////////////////////////
 
@@ -101,7 +60,8 @@ auto main() -> int {
     xil_printf("\r\n");
     xil_printf("Entered function main\r\n");
 
-    // Initialize LED Device
+    //////////////////////////////////////////////////
+    // Setup LED and button controllers 
     io::init();
 
     //////////////////////////////////////////////////
@@ -115,45 +75,17 @@ auto main() -> int {
 
     //////////////////////////////////////////////////
     // Setup interrupt controller.
-    xil_printf("Setup interrupts O_O\r\n");
-
-    if(XIntc_Initialize(&interrupt_controller, INTC_DEVICE_ID) != XST_SUCCESS) {
-        xil_printf("Interrupt init failed\r\n");
-    }
-
-    if(XIntc_SelfTest(&interrupt_controller) != XST_SUCCESS) {
-        xil_printf("Interrupt self-test failed\r\n");
-    }
+    xil_printf("Setup interrupts - ");
+    const auto status = interrupt::init();
+    xil_printf("%s\r\n", interrupt::status_message(status).data());
 
     //////////////////////////////////////////////////
     // Setup interrupts.
-    if(SetUpInterruptSystem(&interrupt_controller,
-                            MOTOR_ADV_INT_ID,
-                            (XInterruptHandler)motor_advance_isr)
-       != XST_SUCCESS) {
-        xil_printf("Interrupt setup failed\r\n");
-    }
 
-    if(SetUpInterruptSystem(&interrupt_controller,
-                            MOTOR_REV_INT_ID,
-                            (XInterruptHandler)motor_reverse_isr)
-       != XST_SUCCESS) {
-        xil_printf("Interrupt setup failed\r\n");
-    }
-
-    if(SetUpInterruptSystem(&interrupt_controller,
-                            HEAD_ACTIVE_START_INT_ID,
-                            (XInterruptHandler)head_active_start_isr)
-       != XST_SUCCESS) {
-        xil_printf("Interrupt setup failed\r\n");
-    }
-
-    if(SetUpInterruptSystem(&interrupt_controller,
-                            HEAD_ACTIVE_END_INT_ID,
-                            (XInterruptHandler)head_active_end_isr)
-       != XST_SUCCESS) {
-        xil_printf("Interrupt setup failed\r\n");
-    }
+    interrupt::enable(interrupt::MotorAdvance, (XInterruptHandler)motor_advance_isr);
+    interrupt::enable(interrupt::MotorReverse, (XInterruptHandler)motor_reverse_isr);
+    interrupt::enable(interrupt::HeadActiveStart, (XInterruptHandler)head_active_start_isr);
+    interrupt::enable(interrupt::HeadActiveEnd, (XInterruptHandler)head_active_end_isr);
 
     //////////
 
@@ -222,8 +154,7 @@ auto main() -> int {
 //////////////////////////////////////////////////
 
 void motor_advance_isr([[maybe_unused]] void* CallbackRef) {
-
-    XIntc_Acknowledge(&interrupt_controller, MOTOR_ADV_INT_ID);
+    interrupt::acknowledge(interrupt::MotorAdvance);
 
     action_buffer[action_buffer_in_ptr] = MechAction::Advance;
     action_buffer_in_ptr = (action_buffer_in_ptr + 1) % ACTION_BUFFER_SIZE;
@@ -231,8 +162,7 @@ void motor_advance_isr([[maybe_unused]] void* CallbackRef) {
 }
 
 void motor_reverse_isr([[maybe_unused]] void* CallbackRef) {
-
-    XIntc_Acknowledge(&interrupt_controller, MOTOR_REV_INT_ID);
+    interrupt::acknowledge(interrupt::MotorReverse);
 
     action_buffer[action_buffer_in_ptr] = MechAction::Reverse;
     action_buffer_in_ptr = (action_buffer_in_ptr + 1) % ACTION_BUFFER_SIZE;
@@ -240,7 +170,7 @@ void motor_reverse_isr([[maybe_unused]] void* CallbackRef) {
 }
 
 void head_active_start_isr([[maybe_unused]] void* CallbackRef) {
-    XIntc_Acknowledge(&interrupt_controller, HEAD_ACTIVE_START_INT_ID);
+    interrupt::acknowledge(interrupt::HeadActiveStart);
 
     action_buffer[action_buffer_in_ptr] = MechAction::BurnLineStart;
     action_buffer_in_ptr = (action_buffer_in_ptr + 1) % ACTION_BUFFER_SIZE;
@@ -248,7 +178,7 @@ void head_active_start_isr([[maybe_unused]] void* CallbackRef) {
 }
 
 void head_active_end_isr([[maybe_unused]] void* CallbackRef) {
-    XIntc_Acknowledge(&interrupt_controller, HEAD_ACTIVE_END_INT_ID);
+    interrupt::acknowledge(interrupt::HeadActiveEnd);
 
     action_buffer[action_buffer_in_ptr] = MechAction::BurnLineStop;
     action_buffer_in_ptr = (action_buffer_in_ptr + 1) % ACTION_BUFFER_SIZE;

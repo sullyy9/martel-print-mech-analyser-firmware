@@ -73,7 +73,7 @@ Diagnostics:
   ClangTidy:
     CheckOptions:
       readability-identifier-naming.VariableCase: lower_case
-      readability-identifier-naming.MemberPrefix: '_'
+      readability-identifier-naming.PrivateMemberPrefix: '_'
       readability-identifier-naming.GlobalConstantCase: UPPER_CASE
       readability-identifier-naming.ClassCase: CamelCase
       readability-identifier-naming.EnumCase: CamelCase
