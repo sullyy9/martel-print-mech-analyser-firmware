@@ -4,7 +4,7 @@ bsp_lib_path = current_dir + 'microblaze_0/lib/libxil.a'
 
 # Build the BSP library and install it into buildir.
 bsp_build_lib = custom_target('bsp',
-    command: ['mkdir', bsp_lib_dir, '&&', 'make', '-C', current_dir, '&&', 'cp', bsp_lib_path, './lib/bsp/'],
+    command: ['mkdir', '-p', bsp_lib_dir, '&&', 'make', '-C', current_dir, '&&', 'cp', bsp_lib_path, './lib/bsp/'],
     output: 'libxil.a'
 )
 
