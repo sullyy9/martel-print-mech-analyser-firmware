@@ -7,6 +7,7 @@
 #include "interrupt.hpp"
 #include "io.hpp"
 #include "mech.hpp"
+#include "thermistor.hpp"
 
 /*------------------------------------------------------------------------------------------------*/
 
@@ -22,6 +23,9 @@ auto main() -> int {
 
     io::init();
     mech::init();
+    thermistor::init();
+
+    thermistor::set_temp(25);
 
     //////////////////////////////////////////////////
     xil_printf("Start main loop :)\r\n");

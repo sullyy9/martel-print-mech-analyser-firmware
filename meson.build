@@ -17,6 +17,8 @@ add_project_arguments(
         '-ffunction-sections',
         '-fdata-sections',
         '-funsigned-char',
+        '-fno-common',
+        '-fno-unwind-tables',
     ],
     language: ['cpp'],
 )

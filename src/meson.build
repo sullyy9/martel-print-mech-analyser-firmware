@@ -3,6 +3,7 @@ project_src = files(
     'io.cpp',
     'mech.cpp',
     'interrupt.cpp',
+    'thermistor.cpp',
 )
 
 project_src_dep = declare_dependency(
