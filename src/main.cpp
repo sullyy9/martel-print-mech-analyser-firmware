@@ -83,13 +83,6 @@ auto main() -> int {
             } else {
                 uart::write("LN:"sv);
                 uart::write(burn_line.value());
-
-                // for(const auto word : burn_line.value()) {
-                //     uart::write(static_cast<uint8_t>(word >> 0 & 0xFF));
-                //     uart::write(static_cast<uint8_t>(word >> 8 & 0xFF));
-                //     uart::write(static_cast<uint8_t>(word >> 16 & 0xFF));
-                //     uart::write(static_cast<uint8_t>(word >> 24 & 0xFF));
-                // }
                 uart::write("\r\n"sv);
             }
             action_next.reset();
