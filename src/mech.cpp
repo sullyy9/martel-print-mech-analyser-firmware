@@ -69,16 +69,22 @@ auto mech::get_next_action() -> std::optional<Action> {
 
 /*------------------------------------------------------------------------------------------------*/
 
-auto mech::read_burn_line() -> std::optional<std::array<uint32_t, HEAD_WORDS>> {
+auto mech::read_burn_line() -> std::optional<std::array<uint8_t, HEAD_BYTES>> {
     const uint32_t words = XLlFifo_iRxGetLen(&burn_buffer) / 4;
     if(words < HEAD_WORDS) {
         return std::nullopt;
     }
 
-    auto burn_line = std::array<uint32_t, HEAD_WORDS>{};
-    for(auto& word : burn_line) {
-        word = XLlFifo_RxGetWord(&burn_buffer);
+    std::array<uint8_t, HEAD_BYTES> burn_line{};
+    for(uint32_t i = 0; i < HEAD_BYTES; i += 4) {
+        const auto word = XLlFifo_RxGetWord(&burn_buffer);
+
+        burn_line[i + 0] = static_cast<uint8_t>((word >> 0) & 0xFF);
+        burn_line[i + 1] = static_cast<uint8_t>((word >> 8) & 0xFF);
+        burn_line[i + 2] = static_cast<uint8_t>((word >> 16) & 0xFF);
+        burn_line[i + 3] = static_cast<uint8_t>((word >> 24) & 0xFF);
     }
+
     return burn_line;
 }
 

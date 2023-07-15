@@ -1,12 +1,15 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <span>
 
 #include "interrupt.hpp"
 #include "io.hpp"
 #include "mech.hpp"
 #include "thermistor.hpp"
 #include "uart.hpp"
+
+using namespace std::literals;
 
 /*------------------------------------------------------------------------------------------------*/
 
@@ -27,12 +30,12 @@ auto main() -> int {
         }
     }
 
-    uart::write("\r\n");
-    uart::write("\r\n");
-    uart::write("\r\n");
-    uart::write("--------------------------------------------------\r\n");
-    uart::write("Martel Print Mech Analyser\r\n");
-    uart::write("--------------------------------------------------\r\n");
+    uart::write("\r\n"sv);
+    uart::write("\r\n"sv);
+    uart::write("\r\n"sv);
+    uart::write("--------------------------------------------------\r\n"sv);
+    uart::write("Martel Print Mech Analyser\r\n"sv);
+    uart::write("--------------------------------------------------\r\n"sv);
 
     mech::init();
     thermistor::init();
@@ -40,9 +43,8 @@ auto main() -> int {
     thermistor::set_temp(25);
 
     //////////////////////////////////////////////////
-    // xil_printf("Start main loop :)\r\n");
 
-    uart::write("Startup complete\r\n");
+    uart::write("Startup complete\r\n"sv);
     std::optional<mech::Action> action_next{};
 
     while(true) {
@@ -63,11 +65,11 @@ auto main() -> int {
         }
 
         if(action_next == mech::Action::Advance) {
-            uart::write("ADV\r\n");
+            uart::write("ADV\r\n"sv);
             action_next.reset();
 
         } else if(action_next == mech::Action::Reverse) {
-            uart::write("REV\r\n");
+            uart::write("REV\r\n"sv);
             action_next.reset();
 
         } else if(action_next == mech::Action::BurnLineStart) {
@@ -77,16 +79,18 @@ auto main() -> int {
             const auto burn_line = mech::read_burn_line();
 
             if(!burn_line) {
-                uart::write("Error: expected burn line but none was available.");
+                uart::write("Error: expected burn line but none was available.\r\n"sv);
             } else {
-                uart::write("LN:");
-                for(const auto word : burn_line.value()) {
-                    uart::write(static_cast<uint8_t>(word >> 0 & 0xFF));
-                    uart::write(static_cast<uint8_t>(word >> 8 & 0xFF));
-                    uart::write(static_cast<uint8_t>(word >> 16 & 0xFF));
-                    uart::write(static_cast<uint8_t>(word >> 24 & 0xFF));
-                }
-                uart::write("\r\n");
+                uart::write("LN:"sv);
+                uart::write(burn_line.value());
+
+                // for(const auto word : burn_line.value()) {
+                //     uart::write(static_cast<uint8_t>(word >> 0 & 0xFF));
+                //     uart::write(static_cast<uint8_t>(word >> 8 & 0xFF));
+                //     uart::write(static_cast<uint8_t>(word >> 16 & 0xFF));
+                //     uart::write(static_cast<uint8_t>(word >> 24 & 0xFF));
+                // }
+                uart::write("\r\n"sv);
             }
             action_next.reset();
         }
