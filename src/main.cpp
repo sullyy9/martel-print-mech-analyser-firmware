@@ -2,36 +2,48 @@
 #include <cstdint>
 #include <optional>
 
-#include "xil_printf.h"
-
 #include "interrupt.hpp"
 #include "io.hpp"
 #include "mech.hpp"
 #include "thermistor.hpp"
+#include "uart.hpp"
 
 /*------------------------------------------------------------------------------------------------*/
 
 auto main() -> int {
 
-    xil_printf("\r\n");
-    xil_printf("\r\n");
-    xil_printf("\r\n");
-    xil_printf("Entered function main\r\n");
-
-    const auto status = interrupt::init();
-    xil_printf("Setup interrupts - %s\r\n", interrupt::status_message(status).data());
-
     io::init();
+    io::rgb_led_set(io::LEDColour::Green);
+
+    if(const auto status = interrupt::init(); status != interrupt::Status::Ok) {
+        while(true) {
+            io::rgb_led_set(io::LEDColour::Red);
+        }
+    }
+
+    if(const auto error = uart::init(); error) {
+        while(true) {
+            io::rgb_led_set(io::LEDColour::Red);
+        }
+    }
+
+    uart::write("\r\n");
+    uart::write("\r\n");
+    uart::write("\r\n");
+    uart::write("--------------------------------------------------\r\n");
+    uart::write("Martel Print Mech Analyser\r\n");
+    uart::write("--------------------------------------------------\r\n");
+
     mech::init();
     thermistor::init();
 
     thermistor::set_temp(25);
-    
 
     //////////////////////////////////////////////////
-    xil_printf("Start main loop :)\r\n");
+    // xil_printf("Start main loop :)\r\n");
 
-    std::optional<mech::Action> action_next {};
+    uart::write("Startup complete\r\n");
+    std::optional<mech::Action> action_next{};
 
     while(true) {
         if(io::button_is_pressed()) {
@@ -51,11 +63,11 @@ auto main() -> int {
         }
 
         if(action_next == mech::Action::Advance) {
-            print("ADV\r\n");
+            uart::write("ADV\r\n");
             action_next.reset();
 
         } else if(action_next == mech::Action::Reverse) {
-            print("REV\r\n");
+            uart::write("REV\r\n");
             action_next.reset();
 
         } else if(action_next == mech::Action::BurnLineStart) {
@@ -65,16 +77,16 @@ auto main() -> int {
             const auto burn_line = mech::read_burn_line();
 
             if(!burn_line) {
-                xil_printf("Error: expected burn line but none was available.");
+                uart::write("Error: expected burn line but none was available.");
             } else {
-                xil_printf("%u LN:", burn_line->size());
+                uart::write("LN:");
                 for(const auto word : burn_line.value()) {
-                    outbyte(static_cast<uint8_t>(word >> 0 & 0xFF));
-                    outbyte(static_cast<uint8_t>(word >> 8 & 0xFF));
-                    outbyte(static_cast<uint8_t>(word >> 16 & 0xFF));
-                    outbyte(static_cast<uint8_t>(word >> 24 & 0xFF));
+                    uart::write(static_cast<uint8_t>(word >> 0 & 0xFF));
+                    uart::write(static_cast<uint8_t>(word >> 8 & 0xFF));
+                    uart::write(static_cast<uint8_t>(word >> 16 & 0xFF));
+                    uart::write(static_cast<uint8_t>(word >> 24 & 0xFF));
                 }
-                xil_printf("\r\n");
+                uart::write("\r\n");
             }
             action_next.reset();
         }

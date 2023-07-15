@@ -38,6 +38,10 @@ enum Interrupt : uint8_t {
     HeadActiveStart = XPAR_MICROBLAZE_0_AXI_INTC_THERMAL_HEAD_HEAD_ACTIVE_START_TICK_INTR,
     HeadActiveEnd = XPAR_MICROBLAZE_0_AXI_INTC_THERMAL_HEAD_HEAD_ACTIVE_END_TICK_INTR,
 
+    Uart = XPAR_MICROBLAZE_0_AXI_INTC_AXI_UARTLITE_0_INTERRUPT_INTR,
+    ThermistorSpi = XPAR_MICROBLAZE_0_AXI_INTC_AXI_SPI_THERMISTOR_IP2INTC_IRPT_INTR,
+    FlashSpi = XPAR_MICROBLAZE_0_AXI_INTC_AXI_QUAD_SPI_FLASH_IP2INTC_IRPT_INTR,
+
 };
 
 using enum Interrupt;
@@ -52,7 +56,7 @@ namespace interrupt {
 
 auto init() -> Status;
 
-auto enable(Interrupt interrupt, XInterruptHandler callback) -> Status;
+auto enable(Interrupt interrupt, XInterruptHandler callback, void* callback_ref) -> Status;
 
 auto acknowledge(Interrupt interrupt) -> void;
 

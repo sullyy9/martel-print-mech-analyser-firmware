@@ -2,6 +2,7 @@ project_src = files(
     'main.cpp',
     'io.cpp',
     'mech.cpp',
+    'uart.cpp',
     'interrupt.cpp',
     'thermistor.cpp',
 )

@@ -45,10 +45,12 @@ auto mech::init() -> void {
     XLlFifo_IntClear(&burn_buffer, 0xFFFFFFFF);
     XLlFifo_Status(&burn_buffer);
 
-    interrupt::enable(interrupt::MotorAdvance, (XInterruptHandler)motor_advance_isr);
-    interrupt::enable(interrupt::MotorReverse, (XInterruptHandler)motor_reverse_isr);
-    interrupt::enable(interrupt::HeadActiveStart, (XInterruptHandler)head_active_start_isr);
-    interrupt::enable(interrupt::HeadActiveEnd, (XInterruptHandler)head_active_end_isr);
+    interrupt::enable(interrupt::MotorAdvance, (XInterruptHandler)motor_advance_isr, nullptr);
+    interrupt::enable(interrupt::MotorReverse, (XInterruptHandler)motor_reverse_isr, nullptr);
+    interrupt::enable(interrupt::HeadActiveStart,
+                      (XInterruptHandler)head_active_start_isr,
+                      nullptr);
+    interrupt::enable(interrupt::HeadActiveEnd, (XInterruptHandler)head_active_end_isr, nullptr);
 }
 
 /*------------------------------------------------------------------------------------------------*/

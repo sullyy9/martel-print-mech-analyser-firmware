@@ -36,8 +36,9 @@ auto interrupt::init() -> Status {
 
 /*------------------------------------------------------------------------------------------------*/
 
-auto interrupt::enable(Interrupt interrupt, XInterruptHandler callback) -> Status {
-    if(XIntc_Connect(&controller, interrupt, (XInterruptHandler)callback, nullptr) != XST_SUCCESS) {
+auto interrupt::enable(Interrupt interrupt, XInterruptHandler callback, void* callback_ref) -> Status {
+
+    if(XIntc_Connect(&controller, interrupt, (XInterruptHandler)callback, callback_ref) != XST_SUCCESS) {
         return Status::InitFailure;
     }
 

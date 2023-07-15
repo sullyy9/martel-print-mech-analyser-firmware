@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <utility>
 
 #include "xgpio.h"
 #include "xparameters.h"
@@ -42,6 +43,13 @@ constexpr auto MONOLED_2_CONFIG = GPIOConfig{
     .mask = 0b10,
 };
 
+constexpr auto RGB_LED_CONFIG = GPIOConfig{
+    .id = XPAR_AXI_GPIO_LED_DEVICE_ID,
+    .channel = 2,
+    .direction = Direction::Output,
+    .mask = 0b111,
+};
+
 constexpr auto BUTTON_CONFIG = GPIOConfig{
     .id = XPAR_AXI_GPIO_BUTTONS_DEVICE_ID,
     .channel = 1,
@@ -65,6 +73,7 @@ constexpr auto PLATEN_SENSOR_CONFIG = GPIOConfig{
 
 XGpio monoled_1{};
 XGpio monoled_2{};
+XGpio rgb_led{};
 XGpio button{};
 XGpio paper_sensor{};
 XGpio platen_sensor{};
@@ -94,6 +103,7 @@ auto gpio_is_low(XGpio instance, const GPIOConfig& config) -> bool;
 auto io::init() -> void {
     monoled_1 = gpio_init(MONOLED_1_CONFIG);
     monoled_2 = gpio_init(MONOLED_2_CONFIG);
+    rgb_led = gpio_init(RGB_LED_CONFIG);
     button = gpio_init(BUTTON_CONFIG);
     paper_sensor = gpio_init(PAPER_SENSOR_CONFIG);
     platen_sensor = gpio_init(PLATEN_SENSOR_CONFIG);
@@ -121,6 +131,12 @@ auto io::monoled_1_off() -> void {
 
 auto io::monoled_2_off() -> void {
     gpio_set_low(monoled_2, MONOLED_2_CONFIG);
+}
+
+/*------------------------------------------------------------------------------------------------*/
+
+auto io::rgb_led_set(const LEDColour colour) -> void {
+    XGpio_DiscreteWrite(&rgb_led, RGB_LED_CONFIG.channel, static_cast<uint32_t>(colour));
 }
 
 /*------------------------------------------------------------------------------------------------*/
