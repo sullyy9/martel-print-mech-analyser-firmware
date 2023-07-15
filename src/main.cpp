@@ -26,6 +26,7 @@ auto main() -> int {
     thermistor::init();
 
     thermistor::set_temp(25);
+    
 
     //////////////////////////////////////////////////
     xil_printf("Start main loop :)\r\n");
@@ -36,9 +37,13 @@ auto main() -> int {
         if(io::button_is_pressed()) {
             io::monoled_1_on();
             io::monoled_2_on();
+            io::paper_out();
+            io::platen_out();
         } else {
             io::monoled_1_off();
             io::monoled_2_off();
+            io::paper_in();
+            io::platen_in();
         }
 
         if(!action_next) {
