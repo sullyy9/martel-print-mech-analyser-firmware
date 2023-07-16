@@ -1,27 +1,34 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// @author  Ryan Sullivan (ryansullivan@googlemail.com)
 ///
-/// @file    uart.hpp
-/// @brief   Module for handling reading and writing from/to the uart peripheral.
+/// @file    protocol.hpp
+/// @brief   Module for enccoding and decoding data.
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <span>
-#include <string_view>
 
 /*------------------------------------------------------------------------------------------------*/
-// Error handling.
+// types
 /*------------------------------------------------------------------------------------------------*/
 
-namespace uart {
+namespace protocol {
 
-enum class Error : uint32_t {
-    None,
-    InitFailure,
+enum class Command : uint32_t {
+    Unrecognised,
+    FrameError,
 
+    Poll,
+
+    SetPaperIn,
+    SetPaperOut,
+
+    SetPlatenIn,
+    SetPlatenOut,
+
+    RecordingStart,
+    RecordingStop,
 };
 
 }
@@ -30,20 +37,9 @@ enum class Error : uint32_t {
 // public functions
 /*------------------------------------------------------------------------------------------------*/
 
-namespace uart {
+namespace protocol {
 
-auto init() -> std::optional<Error>;
-
-auto write(uint8_t byte) -> void;
-auto write(std::span<const uint8_t> data) -> void;
-auto write(std::span<const char> data) -> void;
-
-auto read() -> uint8_t;
-
-auto free() -> uint32_t;
-auto received() -> uint32_t;
-
-auto error_message(Error error) -> std::string_view;
+auto process_byte(uint8_t byte) -> std::optional<Command>;
 
 }
 

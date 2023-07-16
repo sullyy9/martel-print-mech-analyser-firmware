@@ -27,6 +27,11 @@ volatile uint32_t tx_buffer_in_ptr = 0;
 volatile uint32_t tx_buffer_out_ptr = 0;
 volatile uint32_t tx_buffer_count = 0;
 
+auto rx_buffer = std::array<volatile uint8_t, 1024>{};
+volatile uint32_t rx_buffer_in_ptr = 0;
+volatile uint32_t rx_buffer_out_ptr = 0;
+volatile uint32_t rx_buffer_count = 0;
+
 }
 
 /*------------------------------------------------------------------------------------------------*/
@@ -61,6 +66,9 @@ auto uart::init() -> std::optional<Error> {
     XUartLite_SetRecvHandler(&uart_instance, (XUartLite_Handler)receive_isr, &uart_instance);
 
     XUartLite_EnableInterrupt(&uart_instance);
+
+    // Setup next RX request.
+    XUartLite_Recv(&uart_instance, (uint8_t*)&rx_buffer[rx_buffer_in_ptr], 1);
 
     return std::nullopt;
 }
@@ -107,8 +115,24 @@ auto uart::write(std::span<const char> data) -> void {
 
 /*------------------------------------------------------------------------------------------------*/
 
+auto uart::read() -> uint8_t {
+    const auto byte = rx_buffer[rx_buffer_out_ptr];
+    rx_buffer_out_ptr = (rx_buffer_out_ptr + 1) % rx_buffer.size();
+    rx_buffer_count--;
+
+    return byte;
+}
+
+/*------------------------------------------------------------------------------------------------*/
+
 auto uart::free() -> uint32_t {
     return tx_buffer.size() - tx_buffer_count;
+}
+
+/*------------------------------------------------------------------------------------------------*/
+
+auto uart::received() -> uint32_t {
+    return rx_buffer_count;
 }
 
 /*------------------------------------------------------------------------------------------------*/
@@ -129,8 +153,29 @@ auto uart::error_message(Error error) -> std::string_view {
 
 namespace {
 
-auto receive_isr([[maybe_unused]] XUartLite* instance, uint32_t bytes) -> void {
+auto receive_isr([[maybe_unused]] XUartLite* instance, [[maybe_unused]] uint32_t bytes) -> void {
     interrupt::acknowledge(interrupt::Interrupt::Uart);
+
+    // const uint32_t bytes_until_overflow = rx_buffer.size() - rx_buffer_in_ptr;
+    // if(bytes > bytes_until_overflow) {
+    //     XUartLite_Recv(&uart_instance,
+    //                    (uint8_t*)&rx_buffer[rx_buffer_in_ptr],
+    //                    bytes_until_overflow);
+
+    //     rx_buffer_in_ptr = (rx_buffer_in_ptr + bytes_until_overflow) % rx_buffer.size();
+    //     rx_buffer_count += bytes_until_overflow;
+    //     bytes -= bytes_until_overflow;
+    // }
+
+    // XUartLite_Recv(&uart_instance, (uint8_t*)&rx_buffer[rx_buffer_in_ptr], bytes);
+    // rx_buffer_in_ptr = (rx_buffer_in_ptr + bytes) % rx_buffer.size();
+    // rx_buffer_count += bytes;
+
+    rx_buffer_in_ptr = (rx_buffer_in_ptr + 1) % rx_buffer.size();
+    rx_buffer_count++;
+
+    // Setup next RX request.
+    XUartLite_Recv(&uart_instance, (uint8_t*)&rx_buffer[rx_buffer_in_ptr], 1);
 }
 
 /*------------------------------------------------------------------------------------------------*/
