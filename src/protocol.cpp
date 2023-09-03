@@ -8,6 +8,7 @@
 #include <array>
 
 #include "protocol.hpp"
+#include "uart.hpp"
 
 /*------------------------------------------------------------------------------------------------*/
 // types
@@ -54,7 +55,7 @@ auto process_command() -> std::optional<protocol::Command>;
 auto protocol::process_byte(uint8_t byte) -> std::optional<Command> {
 
     if(state == State::Idle) {
-        if(state == State::Idle && byte == FRAME_START) {
+        if(byte == FRAME_START) {
             cmd_buffer_in_ptr = 0;
             state = State::Processing;
         }
@@ -78,8 +79,48 @@ auto protocol::process_byte(uint8_t byte) -> std::optional<Command> {
     }
 
     cmd_buffer[cmd_buffer_in_ptr++] = byte;
+    escape_next = false;
 
     return std::nullopt;
+}
+
+/*------------------------------------------------------------------------------------------------*/
+
+auto protocol::send_response(Response response, std::optional<const std::span<const uint8_t>> data)
+    -> void {
+    if(response == Response::Acknowledge) {
+        // while(uart::free() < 5);
+        uart::write(std::array<uint8_t, 5>{FRAME_START, 0x06, FRAME_END, '\r', '\n'});
+        return;
+    }
+
+    if(response == Response::MotorAdvance) {
+        // while(uart::free() < 5);
+        uart::write(std::array<uint8_t, 5>{FRAME_START, 'F', FRAME_END, '\r', '\n'});
+        return;
+    }
+
+    if(response == Response::MotorReverse) {
+        // while(uart::free() < 5);
+        uart::write(std::array<uint8_t, 5>{FRAME_START, 'B', FRAME_END, '\r', '\n'});
+        return;
+    }
+
+    if(response == Response::BurnLine && data) {
+        // while(uart::free() < (data.value().size() + 5));
+        uart::write(std::array<uint8_t, 2>{FRAME_START, 'U'});
+
+        for(const auto byte : data.value()) {
+            if(byte == FRAME_START || byte == FRAME_END || byte == ESCAPE) {
+                uart::write(std::array{ESCAPE, byte});
+            } else {
+                uart::write(byte);
+            }
+        }
+
+        uart::write(std::array<uint8_t, 3>{FRAME_END, '\r', '\n'});
+        return;
+    }
 }
 
 /*------------------------------------------------------------------------------------------------*/

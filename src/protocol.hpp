@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <span>
 
 /*------------------------------------------------------------------------------------------------*/
 // types
@@ -31,6 +32,14 @@ enum class Command : uint32_t {
     RecordingStop,
 };
 
+enum class Response : uint32_t {
+    Acknowledge,
+
+    MotorAdvance,
+    MotorReverse,
+    BurnLine,
+};
+
 }
 
 /*------------------------------------------------------------------------------------------------*/
@@ -40,6 +49,8 @@ enum class Command : uint32_t {
 namespace protocol {
 
 auto process_byte(uint8_t byte) -> std::optional<Command>;
+
+auto send_response(Response response, std::optional<const std::span<const uint8_t>> data) -> void;
 
 }
 

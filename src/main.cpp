@@ -83,11 +83,13 @@ auto main() -> int {
         // Handle the command if one was found.
         if(command) {
             using enum protocol::Command;
+            using enum protocol::Response;
+
             switch(command.value()) {
                 case Unrecognised: uart::write("Unrecognised command\r\n"sv); break;
                 case FrameError: uart::write("Frame error\r\n"sv); break;
 
-                case Poll: uart::write(0x06); break;
+                case Poll: protocol::send_response(Acknowledge, std::nullopt); break;
 
                 case SetPaperIn: io::paper_in(); break;
                 case SetPaperOut: io::paper_out(); break;
@@ -102,16 +104,18 @@ auto main() -> int {
 
         // Process mech events.
         if(record) {
+            using enum protocol::Response;
+
             if(!action_next) {
                 action_next = mech::get_next_action();
             }
 
             if(action_next == mech::Action::Advance) {
-                uart::write("ADV\r\n"sv);
+                protocol::send_response(MotorAdvance, std::nullopt);
                 action_next.reset();
 
             } else if(action_next == mech::Action::Reverse) {
-                uart::write("REV\r\n"sv);
+                protocol::send_response(MotorReverse, std::nullopt);
                 action_next.reset();
 
             } else if(action_next == mech::Action::BurnLineStart) {
@@ -123,9 +127,7 @@ auto main() -> int {
                 if(!burn_line) {
                     uart::write("Error: expected burn line but none was available.\r\n"sv);
                 } else {
-                    uart::write("LN:"sv);
-                    uart::write(burn_line.value());
-                    uart::write("\r\n"sv);
+                    protocol::send_response(BurnLine, burn_line.value());
                 }
                 action_next.reset();
             }
