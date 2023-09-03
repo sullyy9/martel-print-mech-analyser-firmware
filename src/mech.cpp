@@ -55,6 +55,23 @@ auto mech::init() -> void {
 
 /*------------------------------------------------------------------------------------------------*/
 
+auto mech::clear() -> void {
+    const uint32_t words = XLlFifo_iRxGetLen(&burn_buffer);
+    if(words < HEAD_WORDS) {
+        return;
+    }
+
+    while(XLlFifo_iRxGetLen(&burn_buffer) > 0) {
+        XLlFifo_RxGetWord(&burn_buffer);
+    }
+
+    action_buffer_in_ptr = 0;
+    action_buffer_out_ptr = 0;
+    action_buffer_count = 0;
+}
+
+/*------------------------------------------------------------------------------------------------*/
+
 auto mech::get_next_action() -> std::optional<Action> {
     if(action_buffer_out_ptr == action_buffer_in_ptr) {
         return std::nullopt;

@@ -97,7 +97,11 @@ auto main() -> int {
                 case SetPlatenIn: io::platen_in(); break;
                 case SetPlatenOut: io::platen_out(); break;
 
-                case RecordingStart: record = true; break;
+                case RecordingStart: {
+                    mech::clear();
+                    record = true;
+                    break;
+                }
                 case RecordingStop: record = false; break;
             }
         }

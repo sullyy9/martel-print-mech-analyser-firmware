@@ -33,6 +33,8 @@ namespace mech {
 
 auto init() -> void;
 
+auto clear() -> void;
+
 auto get_next_action() -> std::optional<Action>;
 
 auto read_burn_line() -> std::optional<std::array<uint8_t, HEAD_BYTES>>;
